@@ -7,8 +7,3 @@
         min-height: 300px;
     }
 }
-
-#landmark-info {
-    max-height: 50%;
-    overflow-y: auto;
-}
