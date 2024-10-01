@@ -38,6 +38,11 @@ function initMap() {
     }
 
     map.on('moveend', fetchLandmarks);
+
+    // Add event listeners to checkboxes
+    document.querySelectorAll('.landmark-filter').forEach(checkbox => {
+        checkbox.addEventListener('change', fetchLandmarks);
+    });
 }
 
 function fetchLandmarks() {
@@ -48,7 +53,10 @@ function fetchLandmarks() {
         center.distanceTo(bounds.getSouthWest())
     );
 
-    fetch(`/landmarks?lat=${center.lat}&lon=${center.lng}&radius=${radius}`)
+    // Get selected filters
+    const selectedFilters = Array.from(document.querySelectorAll('.landmark-filter:checked')).map(cb => cb.value);
+
+    fetch(`/landmarks?lat=${center.lat}&lon=${center.lng}&radius=${radius}&filters=${selectedFilters.join(',')}`)
         .then(response => response.json())
         .then(landmarks => {
             console.log('Landmarks received:', landmarks);
@@ -65,6 +73,7 @@ function clearMarkers() {
 
 function addMarker(landmark) {
     const marker = L.marker([landmark.lat, landmark.lon]).addTo(map);
+    marker.bindPopup(`<b>${landmark.title}</b><br>${landmark.type}`);
     marker.on('click', () => {
         console.log('Marker clicked:', landmark);
         fetchLandmarkInfo(landmark.pageid);

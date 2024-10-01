@@ -7,3 +7,16 @@
         min-height: 300px;
     }
 }
+
+#filters {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.landmark-filter {
+    margin-right: 5px;
+}
+
+.landmark-filter + span {
+    font-size: 14px;
+}
