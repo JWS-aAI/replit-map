@@ -3,16 +3,21 @@ from flask import Flask, render_template, jsonify, request
 import requests
 from urllib.parse import urlparse, quote_plus
 import logging
+from flask_caching import Cache
 
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
+
+# Configure caching
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/landmarks')
+@cache.memoize(timeout=300)  # Cache for 5 minutes
 def get_landmarks():
     # Get coordinates from query parameters
     lat = float(request.args.get('lat'))
@@ -47,6 +52,7 @@ def get_landmarks():
     return jsonify(landmarks)
 
 @app.route('/landmark/<int:pageid>')
+@cache.memoize(timeout=3600)  # Cache for 1 hour
 def get_landmark_info(pageid):
     # Query Wikipedia API for landmark details
     url = f"https://en.wikipedia.org/w/api.php?action=query&pageids={pageid}&prop=extracts&exintro&format=json&explaintext"
@@ -62,6 +68,7 @@ def get_landmark_info(pageid):
     })
 
 @app.route('/search')
+@cache.memoize(timeout=3600)  # Cache for 1 hour
 def search():
     query = request.args.get('q', '')
     if not query:
