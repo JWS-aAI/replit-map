@@ -114,7 +114,8 @@ function performSearch() {
                 console.log('Search result:', result);
                 if (result.lat && result.lon) {
                     map.setView([result.lat, result.lon], 13);
-                    fetchLandmarks();
+                    clearMarkers(); // Clear existing markers before fetching new ones
+                    fetchLandmarks(); // Fetch landmarks for the new location
                 } else {
                     alert('Location not found. Please try a different search term.');
                 }

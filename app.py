@@ -82,7 +82,7 @@ def get_landmark_info(pageid):
     })
 
 @app.route('/search')
-@cache.memoize(timeout=3600)  # Cache for 1 hour
+# Removed @cache.memoize decorator to ensure fresh results for each search
 def search():
     query = request.args.get('q', '')
     logging.info(f"Received search query: {query}")
