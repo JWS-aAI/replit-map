@@ -57,11 +57,31 @@ function fetchLandmarkInfo(pageid) {
         .then(response => response.json())
         .then(info => {
             console.log('Landmark info received:', info);
-            document.getElementById('landmark-title').textContent = info.title;
-            document.getElementById('landmark-description').textContent = info.extract;
-            document.getElementById('landmark-info').classList.remove('hidden');
+            const infoElement = document.getElementById('landmark-info');
+            const titleElement = document.getElementById('landmark-title');
+            const descriptionElement = document.getElementById('landmark-description');
+            
+            if (infoElement && titleElement && descriptionElement) {
+                titleElement.textContent = info.title;
+                descriptionElement.textContent = info.extract;
+                infoElement.classList.remove('hidden');
+                // Ensure the info is in view
+                infoElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                console.error('One or more DOM elements not found');
+            }
         })
         .catch(error => console.error('Error fetching landmark info:', error));
 }
 
 document.addEventListener('DOMContentLoaded', initMap);
+
+// Add click event listener to the map container
+document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    
+    const mapContainer = document.getElementById('map');
+    mapContainer.addEventListener('click', (event) => {
+        console.log('Map container clicked', event);
+    });
+});
