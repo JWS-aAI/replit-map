@@ -2,21 +2,42 @@ let map;
 let markers = [];
 
 function initMap() {
+    // Initialize the map with a default view
     map = L.map('map').setView([0, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    map.on('moveend', fetchLandmarks);
-
     // Try to get user's location
     if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            map.setView([position.coords.latitude, position.coords.longitude], 13);
-        }, function(error) {
-            console.error("Error: " + error.message);
-        });
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                // Success callback
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
+                map.setView([userLat, userLon], 13);
+                console.log("User location detected:", userLat, userLon);
+                fetchLandmarks();
+            },
+            function(error) {
+                // Error callback
+                console.error("Geolocation error:", error.message);
+                // If geolocation fails, we'll keep the default view and fetch landmarks
+                fetchLandmarks();
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        console.log("Geolocation is not supported by this browser.");
+        // If geolocation is not supported, we'll keep the default view and fetch landmarks
+        fetchLandmarks();
     }
+
+    map.on('moveend', fetchLandmarks);
 }
 
 function fetchLandmarks() {
