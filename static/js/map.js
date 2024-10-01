@@ -30,6 +30,7 @@ function fetchLandmarks() {
     fetch(`/landmarks?lat=${center.lat}&lon=${center.lng}&radius=${radius}`)
         .then(response => response.json())
         .then(landmarks => {
+            console.log('Landmarks received:', landmarks);
             clearMarkers();
             landmarks.forEach(addMarker);
         })
@@ -43,14 +44,19 @@ function clearMarkers() {
 
 function addMarker(landmark) {
     const marker = L.marker([landmark.lat, landmark.lon]).addTo(map);
-    marker.on('click', () => fetchLandmarkInfo(landmark.pageid));
+    marker.on('click', () => {
+        console.log('Marker clicked:', landmark);
+        fetchLandmarkInfo(landmark.pageid);
+    });
     markers.push(marker);
 }
 
 function fetchLandmarkInfo(pageid) {
+    console.log('Fetching landmark info for pageid:', pageid);
     fetch(`/landmark/${pageid}`)
         .then(response => response.json())
         .then(info => {
+            console.log('Landmark info received:', info);
             document.getElementById('landmark-title').textContent = info.title;
             document.getElementById('landmark-description').textContent = info.extract;
             document.getElementById('landmark-info').classList.remove('hidden');
