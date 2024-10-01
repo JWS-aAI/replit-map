@@ -43,6 +43,16 @@ function initMap() {
     document.querySelectorAll('.landmark-filter').forEach(checkbox => {
         checkbox.addEventListener('change', fetchLandmarks);
     });
+
+    // Add event listener for search button
+    document.getElementById('search-button').addEventListener('click', performSearch);
+
+    // Add event listener for search input (Enter key)
+    document.getElementById('search-input').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            performSearch();
+        }
+    });
 }
 
 function fetchLandmarks() {
@@ -92,6 +102,28 @@ function fetchLandmarkInfo(pageid) {
             document.getElementById('landmark-info').classList.remove('hidden');
         })
         .catch(error => console.error('Error fetching landmark info:', error));
+}
+
+function performSearch() {
+    const searchQuery = document.getElementById('search-input').value.trim();
+    if (searchQuery) {
+        console.log('Performing search for:', searchQuery);
+        fetch(`/search?q=${encodeURIComponent(searchQuery)}`)
+            .then(response => response.json())
+            .then(result => {
+                console.log('Search result:', result);
+                if (result.lat && result.lon) {
+                    map.setView([result.lat, result.lon], 13);
+                    fetchLandmarks();
+                } else {
+                    alert('Location not found. Please try a different search term.');
+                }
+            })
+            .catch(error => {
+                console.error('Error performing search:', error);
+                alert('An error occurred while searching. Please try again.');
+            });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', initMap);

@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, jsonify, request
 import requests
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote_plus
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -60,6 +60,35 @@ def get_landmark_info(pageid):
         'title': page['title'],
         'extract': extract[:200] + '...' if len(extract) > 200 else extract
     })
+
+@app.route('/search')
+def search():
+    query = request.args.get('q', '')
+    if not query:
+        return jsonify({'error': 'No search query provided'}), 400
+
+    # Use Nominatim API for geocoding
+    encoded_query = quote_plus(query)
+    url = f"https://nominatim.openstreetmap.org/search?q={encoded_query}&format=json&limit=1"
+    headers = {'User-Agent': 'LocalLandmarksApp/1.0'}
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        
+        if data:
+            result = data[0]
+            return jsonify({
+                'lat': float(result['lat']),
+                'lon': float(result['lon']),
+                'display_name': result['display_name']
+            })
+        else:
+            return jsonify({'error': 'Location not found'}), 404
+    except requests.RequestException as e:
+        logging.error(f"Error during geocoding request: {str(e)}")
+        return jsonify({'error': 'An error occurred during the search'}), 500
 
 def classify_landmark(title):
     # This is a simple classification based on keywords

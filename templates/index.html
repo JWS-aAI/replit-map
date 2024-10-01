@@ -11,27 +11,36 @@
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-4xl font-bold mb-4">Local Landmarks Map</h1>
-        <div class="flex">
-            <div id="map" class="w-3/4 h-96 rounded-lg shadow-lg"></div>
-            <div id="filters" class="w-1/4 ml-4 p-4 bg-white rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold mb-2">Filters</h2>
-                <div>
-                    <label class="flex items-center">
-                        <input type="checkbox" class="landmark-filter" value="historical" checked>
-                        <span class="ml-2">Historical</span>
-                    </label>
+        <div class="flex flex-col md:flex-row">
+            <div class="w-full md:w-3/4 mb-4 md:mb-0">
+                <div id="map" class="h-96 rounded-lg shadow-lg"></div>
+            </div>
+            <div class="w-full md:w-1/4 md:ml-4">
+                <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+                    <h2 class="text-xl font-semibold mb-2">Search</h2>
+                    <input type="text" id="search-input" class="w-full p-2 border rounded" placeholder="Search for landmarks or locations">
+                    <button id="search-button" class="mt-2 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Search</button>
                 </div>
-                <div>
-                    <label class="flex items-center">
-                        <input type="checkbox" class="landmark-filter" value="natural" checked>
-                        <span class="ml-2">Natural</span>
-                    </label>
-                </div>
-                <div>
-                    <label class="flex items-center">
-                        <input type="checkbox" class="landmark-filter" value="cultural" checked>
-                        <span class="ml-2">Cultural</span>
-                    </label>
+                <div id="filters" class="bg-white rounded-lg shadow-md p-4">
+                    <h2 class="text-xl font-semibold mb-2">Filters</h2>
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="landmark-filter" value="historical" checked>
+                            <span class="ml-2">Historical</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="landmark-filter" value="natural" checked>
+                            <span class="ml-2">Natural</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="flex items-center">
+                            <input type="checkbox" class="landmark-filter" value="cultural" checked>
+                            <span class="ml-2">Cultural</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
