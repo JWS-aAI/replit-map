@@ -2,6 +2,9 @@ import os
 from flask import Flask, render_template, jsonify, request
 import requests
 from urllib.parse import urlparse
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -20,16 +23,21 @@ def get_landmarks():
     url = f"https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius={radius}&gscoord={lat}|{lon}&gslimit=50&format=json"
     response = requests.get(url)
     data = response.json()
-
+    
+    logging.debug(f'Wikipedia API response: {data}')
+    
     landmarks = []
-    for place in data['query']['geosearch']:
-        landmarks.append({
-            'pageid': place['pageid'],
-            'title': place['title'],
-            'lat': place['lat'],
-            'lon': place['lon'],
-        })
-
+    if 'query' in data and 'geosearch' in data['query']:
+        for place in data['query']['geosearch']:
+            landmarks.append({
+                'pageid': place['pageid'],
+                'title': place['title'],
+                'lat': place['lat'],
+                'lon': place['lon'],
+            })
+    else:
+        logging.error(f'Unexpected API response format: {data}')
+    
     return jsonify(landmarks)
 
 @app.route('/landmark/<int:pageid>')
