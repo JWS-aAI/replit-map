@@ -6,7 +6,7 @@ import logging
 from flask_caching import Cache
 import time
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 
@@ -85,7 +85,10 @@ def get_landmark_info(pageid):
 @cache.memoize(timeout=3600)  # Cache for 1 hour
 def search():
     query = request.args.get('q', '')
+    logging.info(f"Received search query: {query}")
+    
     if not query:
+        logging.warning("No search query provided")
         return jsonify({'error': 'No search query provided'}), 400
 
     # Use Nominatim API for geocoding
@@ -94,18 +97,23 @@ def search():
     headers = {'User-Agent': 'LocalLandmarksApp/1.0'}
     
     try:
+        logging.info(f"Sending request to Nominatim API: {url}")
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         data = response.json()
         
+        logging.info(f"Received response from Nominatim API: {data}")
+        
         if data:
             result = data[0]
+            logging.info(f"Search result: {result}")
             return jsonify({
                 'lat': float(result['lat']),
                 'lon': float(result['lon']),
                 'display_name': result['display_name']
             })
         else:
+            logging.warning(f"Location not found for query: {query}")
             return jsonify({'error': 'Location not found'}), 404
     except requests.RequestException as e:
         logging.error(f"Error during geocoding request: {str(e)}")
