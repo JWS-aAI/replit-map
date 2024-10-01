@@ -4,6 +4,7 @@ import requests
 from urllib.parse import urlparse, quote_plus
 import logging
 from flask_caching import Cache
+import time
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -17,7 +18,6 @@ def index():
     return render_template('index.html')
 
 @app.route('/landmarks')
-@cache.memoize(timeout=300)  # Cache for 5 minutes
 def get_landmarks():
     # Get coordinates from query parameters
     lat = float(request.args.get('lat'))
@@ -25,7 +25,18 @@ def get_landmarks():
     radius = int(float(request.args.get('radius', 10000)))  # Default radius: 10km, converted to integer
     filters = request.args.get('filters', '').split(',')
 
-    # Query Wikipedia API for nearby landmarks
+    # Create a cache key that includes lat, lon, and radius
+    cache_key = f"landmarks_{lat}_{lon}_{radius}"
+
+    # Check if we have cached data for this key
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        timestamp, landmarks = cached_data
+        # Check if the cached data is less than 5 minutes old
+        if time.time() - timestamp < 300:
+            return jsonify(landmarks)
+
+    # If no cached data or it's expired, fetch new data
     url = f"https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius={radius}&gscoord={lat}|{lon}&gslimit=50&format=json"
     logging.debug(f'Wikipedia API request URL: {url}')
     
@@ -48,6 +59,9 @@ def get_landmarks():
                 })
     else:
         logging.error(f'Unexpected API response format: {data}')
+    
+    # Cache the new data with the current timestamp
+    cache.set(cache_key, (time.time(), landmarks))
     
     return jsonify(landmarks)
 
