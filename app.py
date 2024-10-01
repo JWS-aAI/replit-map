@@ -17,10 +17,12 @@ def get_landmarks():
     # Get coordinates from query parameters
     lat = float(request.args.get('lat'))
     lon = float(request.args.get('lon'))
-    radius = float(request.args.get('radius', 10000))  # Default radius: 10km
+    radius = int(float(request.args.get('radius', 10000)))  # Default radius: 10km, converted to integer
 
     # Query Wikipedia API for nearby landmarks
     url = f"https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius={radius}&gscoord={lat}|{lon}&gslimit=50&format=json"
+    logging.debug(f'Wikipedia API request URL: {url}')
+    
     response = requests.get(url)
     data = response.json()
     
