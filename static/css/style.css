@@ -20,3 +20,16 @@
 .landmark-filter + span {
     font-size: 14px;
 }
+
+#chat-container {
+    /* Ensure the chatbot is above other elements */
+    z-index: 1000;
+}
+
+#chat-body {
+    background-color: #f9f9f9;
+}
+
+#chat-input {
+    /* Additional styling if necessary */
+}
