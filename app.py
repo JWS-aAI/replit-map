@@ -147,5 +147,27 @@ def classify_landmark(title: str) -> str:
         return "cultural"
 
 
+@app.route("/route")
+def get_route():
+    start_lat = float(request.args.get("start_lat"))
+    start_lon = float(request.args.get("start_lon"))
+    end_lat = float(request.args.get("end_lat"))
+    end_lon = float(request.args.get("end_lon"))
+
+    # OSRM API URL for calculating the route
+    osrm_url = f"http://router.project-osrm.org/route/v1/driving/{start_lon},{start_lat};{end_lon},{end_lat}?overview=full&geometries=geojson"
+    logging.info(f"OSRM route API request: {osrm_url}")
+
+    try:
+        response = requests.get(osrm_url)
+        response.raise_for_status()
+        route_data = response.json()
+        route_geometry = route_data["routes"][0]["geometry"]
+        return jsonify({"geometry": route_geometry})
+    except requests.RequestException as e:
+        logging.error(f"Error fetching route: {e}")
+        return jsonify({"error": "An error occurred while fetching the route"}), 500
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)

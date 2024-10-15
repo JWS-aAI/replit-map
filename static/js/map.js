@@ -1,5 +1,6 @@
 let map;
 let markers = [];
+let routeLayer;
 
 function initMap() {
     // Initialize the map with a default view
@@ -126,5 +127,22 @@ function performSearch() {
             });
     }
 }
+
+
+function fetchRoute(startLat, startLon, endLat, endLon) {
+    fetch(`/route?start_lat=${startLat}&start_lon=${startLon}&end_lat=${endLat}&end_lon=${endLon}`)
+        .then(response => response.json())
+        .then(data => {
+            if (routeLayer) {
+                map.removeLayer(routeLayer);
+            }
+
+            routeLayer = L.geoJSON(data.geometry).addTo(map);
+            const bounds = routeLayer.getBounds();
+            map.fitBounds(bounds);
+        })
+        .catch(error => console.error('Error fetching route:', error));
+}
+
 
 document.addEventListener('DOMContentLoaded', initMap);
