@@ -154,8 +154,7 @@ def get_route():
     end_lat = float(request.args.get("end_lat"))
     end_lon = float(request.args.get("end_lon"))
 
-    # OSRM API URL for calculating the route
-    osrm_url = f"http://router.project-osrm.org/route/v1/driving/{start_lon},{start_lat};{end_lon},{end_lat}?overview=full&geometries=geojson"
+    osrm_url = f"http://router.project-osrm.org/route/v1/driving/{start_lat},{start_lon};{end_lat},{end_lon}?overview=full&geometries=geojson"
     logging.info(f"OSRM route API request: {osrm_url}")
 
     try:
