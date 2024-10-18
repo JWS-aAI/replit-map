@@ -1,33 +1,30 @@
 import pytest
-import sys
-sys.path.insert(0, '')  # Ensure the current directory is in PYTHONPATH
-from app import app as flask_app
+from app import app
 
 @pytest.fixture
 def client():
-    flask_app.config['TESTING'] = True
-    with flask_app.test_client() as client:
+    with app.test_client() as client:
         yield client
 
 def test_get_landmarks(client):
-    response = client.get('/landmarks?lat=51.5074&lon=-0.1278&radius=10000')
+    response = client.get('/landmarks?lat=40.7128&lon=-74.0060&radius=10000')
     assert response.status_code == 200
     assert isinstance(response.json, list)
 
 def test_get_landmark_info(client):
-    response = client.get('/landmark/21721040')  # Example PageID
+    # Assuming 12345 is a valid pageid for testing
+    response = client.get('/landmark/12345')
     assert response.status_code == 200
     assert 'title' in response.json
     assert 'extract' in response.json
 
-def test_search(client):
-    response = client.get('/search?q=Eiffel Tower')
-    assert response.status_code in [200, 404, 400]
-    if response.status_code == 200:
-        assert 'lat' in response.json
-        assert 'lon' in response.json
+def test_search_valid_query(client):
+    response = client.get('/search?q=New York')
+    assert response.status_code == 200
+    assert 'lat' in response.json
+    assert 'lon' in response.json
 
-def test_search_no_query(client):
+def test_search_empty_query(client):
     response = client.get('/search?q=')
     assert response.status_code == 400
-
+    assert 'error' in response.json
