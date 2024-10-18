@@ -51,6 +51,11 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- Add Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js" crossorigin="anonymous"></script>
+
+    <!-- Load map.js after Socket.IO -->
     <script src="{{ url_for('static', filename='js/map.js') }}"></script>
 </body>
 </html>

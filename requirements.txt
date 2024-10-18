@@ -1,0 +1,13 @@
+flask
+flask-sqlalchemy
+psycopg2-binary
+email-validator
+requests
+flask-caching
+flask-socketio
+langchain
+openai
+python-dotenv
+langchain-community
+langchain-openai
+langgraph

@@ -1,6 +1,112 @@
 let map;
 let markers = [];
 
+// Initialize Socket.IO
+const socket = io();
+
+// Chatbot elements
+const chatContainer = document.createElement('div');
+chatContainer.id = 'chat-container';
+chatContainer.className = 'fixed bottom-0 right-0 w-1/3 bg-white shadow-lg rounded-tl-lg rounded-tr-lg';
+
+const chatHeader = document.createElement('div');
+chatHeader.className = 'bg-blue-500 text-white p-2 rounded-tl-lg rounded-tr-lg';
+chatHeader.innerText = 'Chatbot';
+
+const chatBody = document.createElement('div');
+chatBody.id = 'chat-body';
+chatBody.className = 'p-2 h-64 overflow-y-auto';
+
+const chatInputContainer = document.createElement('div');
+chatInputContainer.className = 'p-2 flex';
+
+const chatInput = document.createElement('input');
+chatInput.type = 'text';
+chatInput.id = 'chat-input';
+chatInput.className = 'flex-grow p-2 border rounded';
+
+const sendButton = document.createElement('button');
+sendButton.id = 'send-button';
+sendButton.className = 'ml-2 bg-blue-500 text-white p-2 rounded hover:bg-blue-600';
+sendButton.innerText = 'Send';
+
+chatInputContainer.appendChild(chatInput);
+chatInputContainer.appendChild(sendButton);
+chatBody.appendChild(chatInputContainer); // Append input container to chatBody
+chatContainer.appendChild(chatHeader);
+chatContainer.appendChild(chatBody);
+document.body.appendChild(chatContainer);
+
+// Send message to chatbot
+sendButton.addEventListener('click', () => {
+    const message = chatInput.value.trim();
+    if (message) {
+        displayMessage('You', message);
+        socket.emit('send_message', { message });
+        chatInput.value = '';
+    }
+});
+
+// Allow sending message with Enter key
+chatInput.addEventListener('keyup', (event) => {
+    if (event.key === 'Enter') {
+        sendButton.click();
+    }
+});
+
+// Receive message from chatbot
+socket.on('receive_message', (data) => {
+    const message = data.message;
+    displayMessage('Chatbot', message);
+    // Process commands to manipulate the map
+    processChatbotCommand(message);
+});
+
+// Display messages in chat
+function displayMessage(sender, message) {
+    const messageElement = document.createElement('div');
+    messageElement.className = 'mb-2';
+    messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    chatBody.appendChild(messageElement);
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+// Process chatbot commands
+function processChatbotCommand(message) {
+    // Example commands:
+    // "Center the map on [location]"
+    // "Add [filter] filter"
+    // "Remove [filter] filter"
+
+    const centerRegex = /center the map on (.+)/i;
+    const addFilterRegex = /add (historical|natural|cultural) filter/i;
+    const removeFilterRegex = /remove (historical|natural|cultural) filter/i;
+
+    let match = message.match(centerRegex);
+    if (match) {
+        const location = match[1];
+        // Implement geocoding to get coordinates and center the map
+        performSearch(location);
+        return;
+    }
+
+    match = message.match(addFilterRegex);
+    if (match) {
+        const filter = match[1];
+        document.querySelector(`.landmark-filter[value="${filter}"]`).checked = true;
+        fetchLandmarks();
+        return;
+    }
+
+    match = message.match(removeFilterRegex);
+    if (match) {
+        const filter = match[1];
+        document.querySelector(`.landmark-filter[value="${filter}"]`).checked = false;
+        fetchLandmarks();
+        return;
+    }
+}
+
 function initMap() {
     // Initialize the map with a default view
     map = L.map('map').setView([0, 0], 2);

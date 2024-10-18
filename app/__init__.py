@@ -1,14 +1,28 @@
 import os
 from flask import Flask, render_template, jsonify, request
-import requests
-from urllib.parse import urlparse, quote_plus
+from flask_socketio import SocketIO, emit
+# from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
 import logging
 from flask_caching import Cache
 import time
 
+import requests
+from urllib.parse import quote_plus
+
+from app.langchain import call_agent
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Load environment variables
+load_dotenv()
+
+# Initialize Flask-SocketIO
 app = Flask(__name__)
+socketio = SocketIO(app)
+
+# Initialize OpenAI LLM
+# llm = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Configure caching
 cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})
@@ -130,5 +144,16 @@ def classify_landmark(title):
     else:
         return 'cultural'
 
+# New SocketIO event for chatbot
+@socketio.on('send_message')
+def handle_send_message(data):
+    print("test")
+
+    user_message = data.get('message')
+    # Process the message with LangChain
+    response = call_agent(user_message)
+    # response = llm(user_message).content  # Extract the text content from AIMessage
+    emit('receive_message', {'message': response})
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=5000)
