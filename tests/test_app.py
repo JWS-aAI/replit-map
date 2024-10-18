@@ -1,5 +1,7 @@
 import pytest
 from flask import Flask
+import sys
+sys.path.insert(0, '')  # Ensure the current directory is in PYTHONPATH
 from app import app as flask_app
 
 @pytest.fixture
