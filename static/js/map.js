@@ -1,8 +1,11 @@
 let map;
 let markers = [];
+let routeLayer;
+let userLat, userLon;
+let selectedLandmark = null;
 
 function initMap() {
-    // Initialize the map with a default view
+    // Initialize the map
     map = L.map('map').setView([0, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -11,18 +14,14 @@ function initMap() {
     // Try to get user's location
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
-            function(position) {
-                // Success callback
-                const userLat = position.coords.latitude;
-                const userLon = position.coords.longitude;
+            function (position) {
+                userLat = position.coords.latitude;
+                userLon = position.coords.longitude;
                 map.setView([userLat, userLon], 13);
-                console.log("User location detected:", userLat, userLon);
                 fetchLandmarks();
             },
-            function(error) {
-                // Error callback
+            function (error) {
                 console.error("Geolocation error:", error.message);
-                // If geolocation fails, we'll keep the default view and fetch landmarks
                 fetchLandmarks();
             },
             {
@@ -32,8 +31,6 @@ function initMap() {
             }
         );
     } else {
-        console.log("Geolocation is not supported by this browser.");
-        // If geolocation is not supported, we'll keep the default view and fetch landmarks
         fetchLandmarks();
     }
 
@@ -48,9 +45,15 @@ function initMap() {
     document.getElementById('search-button').addEventListener('click', performSearch);
 
     // Add event listener for search input (Enter key)
-    document.getElementById('search-input').addEventListener('keyup', function(event) {
+    document.getElementById('search-input').addEventListener('keyup', function (event) {
         if (event.key === 'Enter') {
             performSearch();
+        }
+    });
+
+    document.getElementById('calculate-route-button').addEventListener('click', () => {
+        if (selectedLandmark && userLat && userLon) {
+            calculateRoute(userLat, userLon, selectedLandmark.lat, selectedLandmark.lon);
         }
     });
 }
@@ -69,7 +72,6 @@ function fetchLandmarks() {
     fetch(`/landmarks?lat=${center.lat}&lon=${center.lng}&radius=${radius}&filters=${selectedFilters.join(',')}`)
         .then(response => response.json())
         .then(landmarks => {
-            console.log('Landmarks received:', landmarks);
             clearMarkers();
             landmarks.forEach(addMarker);
         })
@@ -85,18 +87,17 @@ function addMarker(landmark) {
     const marker = L.marker([landmark.lat, landmark.lon]).addTo(map);
     marker.bindPopup(`<b>${landmark.title}</b><br>${landmark.type}`);
     marker.on('click', () => {
-        console.log('Marker clicked:', landmark);
         fetchLandmarkInfo(landmark.pageid);
+        selectedLandmark = landmark;  // Store the clicked landmark for route calculation
+        showRouteButton(landmark);
     });
     markers.push(marker);
 }
 
 function fetchLandmarkInfo(pageid) {
-    console.log('Fetching landmark info for pageid:', pageid);
     fetch(`/landmark/${pageid}`)
         .then(response => response.json())
         .then(info => {
-            console.log('Landmark info received:', info);
             document.getElementById('landmark-title').textContent = info.title;
             document.getElementById('landmark-description').textContent = info.extract;
             document.getElementById('landmark-info').classList.remove('hidden');
@@ -107,15 +108,13 @@ function fetchLandmarkInfo(pageid) {
 function performSearch() {
     const searchQuery = document.getElementById('search-input').value.trim();
     if (searchQuery) {
-        console.log('Performing search for:', searchQuery);
         fetch(`/search?q=${encodeURIComponent(searchQuery)}`)
             .then(response => response.json())
             .then(result => {
-                console.log('Search result:', result);
                 if (result.lat && result.lon) {
                     map.setView([result.lat, result.lon], 13);
-                    clearMarkers(); // Clear existing markers before fetching new ones
-                    fetchLandmarks(); // Fetch landmarks for the new location
+                    clearMarkers();
+                    fetchLandmarks();
                 } else {
                     alert('Location not found. Please try a different search term.');
                 }
@@ -125,6 +124,25 @@ function performSearch() {
                 alert('An error occurred while searching. Please try again.');
             });
     }
+}
+
+function showRouteButton(landmark) {
+    document.getElementById('route-container').classList.remove('hidden');
+    document.getElementById('landmark-name').textContent = landmark.title;
+}
+
+function calculateRoute(startLat, startLon, endLat, endLon) {
+    fetch(`/route?start_lat=${startLat}&start_lon=${startLon}&end_lat=${endLat}&end_lon=${endLon}`)
+        .then(response => response.json())
+        .then(data => {
+            if (routeLayer) {
+                map.removeLayer(routeLayer);  // Remove the previous route if any
+            }
+            routeLayer = L.geoJSON(data.geometry).addTo(map);
+            const bounds = routeLayer.getBounds();
+            map.fitBounds(bounds);
+        })
+        .catch(error => console.error('Error calculating route:', error));
 }
 
 document.addEventListener('DOMContentLoaded', initMap);
